@@ -123,7 +123,7 @@ def dls(problem, limit):
 	return recursive_dls(Node(problem.initial_state, None, None, 0), problem, limit)
 
 def ids(problem):
-	"""Iterative Deepening Depth-First Search"""
+	"""Iterative Deepening Depth-Limited Search"""
 	depth = 0
 	while True:
 		result = dls(problem, depth)

@@ -63,6 +63,8 @@ export class Pathfinder {
         return coords.x === this.endCoords.x && coords.y === this.endCoords.y;
     }
 
+    heuristics = node => ((this.endCoords.y - node.y) ** 2) + ((this.endCoords.x - node.x) ** 2) ** 0.5;
+
     getSurroundingNodesCoords = node => {
         const surroundingNodes = [];
         if (this.nodeIsAtXOfCanvas(node, 'top-left')) {
