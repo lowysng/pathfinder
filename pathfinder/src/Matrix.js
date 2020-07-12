@@ -1,21 +1,21 @@
 import React from 'react';
-import { getPixelStyle } from './util';
+import { getNodeStyle } from './util';
 import './App.css';
 
 function Matrix({ matrix }) {
     return (
-        <>
+        <div className="matrix">
         {matrix.map((row, rowIdx) => (
             <div key={`${rowIdx}`} style={{ display: 'flex' }}>
-                {row.map((pixel, colIdx) => (
+                {row.map((node, colIdx) => (
                     <div 
                     key={`${rowIdx} ${colIdx}`}
-                    style={getPixelStyle(pixel)}>
+                    style={getNodeStyle(node)}>
                     </div>
                 ))}
             </div>
         ))}
-        </>
+        </div>
     )
 }
 
