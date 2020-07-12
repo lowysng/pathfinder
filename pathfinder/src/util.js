@@ -9,15 +9,15 @@ export const initializeMatrix = (row, width, start, end) => {
     return matrix;
 }
 
-export const nodeFlags = {
-    start: 0,
-    end: 1,
-    unexplored: 2,
-    frontier: 3,
-    explored: 4,
-}
-
 export const getNodeStyle = nodeFlag => {
+    const nodeFlags = {
+        start: 0,
+        end: 1,
+        unexplored: 2,
+        frontier: 3,
+        explored: 4,
+        solution: 5,
+    }
     const nodeStyle = {
         width: '25px',
         height: '25px',
@@ -34,26 +34,17 @@ export const getNodeStyle = nodeFlag => {
         nodeStyle.backgroundColor = '#b87fed';
     } else if (nodeFlag === nodeFlags.explored) {
         nodeStyle.backgroundColor = '#290c43';
+    } else if (nodeFlag === nodeFlags.solution) {
+        nodeStyle.backgroundColor = '#FCD12A'
     }
     return nodeStyle;
 }
 
 export class Node {
-    constructor(state, parent, action, pathCost) {
+    constructor(state, parent) {
         this.state = state;
         this.parent = parent;
-        this.action = action;
-        this.pathCost = pathCost;
     }
-}
-
-export const generateChildNode = (agent, parent, action) => {
-    return new Node(
-        agent.transition(parent.state, action),
-        parent,
-        action,
-        parent.pathCost + agent.stepCost(parent.state, action)
-    )
 }
 
 export const getSolution = node => {
@@ -68,13 +59,11 @@ export class Pathfinder {
         this.canvasDimensions = canvasDimensions;
     }
 
-    transition = (fromCoords, toCoords) => toCoords;
+    goalTest = coords => {
+        return coords.x === this.endCoords.x && coords.y === this.endCoords.y;
+    }
 
-    goalTest = nodeCoords => this.endCoords.x === nodeCoords.x && this.endCoords.y === nodeCoords.y;
-
-    stepCost = (parentState, action) => 1;
-
-    getSurroundingNodes = node => {
+    getSurroundingNodesCoords = node => {
         const surroundingNodes = [];
         if (this.nodeIsAtXOfCanvas(node, 'top-left')) {
             surroundingNodes.push({x: node.x + 1, y: node.y});
@@ -156,27 +145,5 @@ export class Pathfinder {
 }
 
 export const objectsAreEquivalent = (a, b) => {
-    // Create arrays of property names
-    var aProps = Object.getOwnPropertyNames(a);
-    var bProps = Object.getOwnPropertyNames(b);
-
-    // If number of properties is different,
-    // objects are not equivalent
-    if (aProps.length != bProps.length) {
-        return false;
-    }
-
-    for (var i = 0; i < aProps.length; i++) {
-        var propName = aProps[i];
-
-        // If values of same property are not equal,
-        // objects are not equivalent
-        if (a[propName] !== b[propName]) {
-            return false;
-        }
-    }
-
-    // If we made it this far, objects
-    // are considered equivalent
-    return true;
+    return a.x === b.x && a.y === b.y;
 }
