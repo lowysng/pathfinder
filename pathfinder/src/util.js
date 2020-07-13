@@ -19,8 +19,8 @@ export const getNodeStyle = nodeFlag => {
         solution: 5,
     }
     const nodeStyle = {
-        width: '25px',
-        height: '25px',
+        width: '30px',
+        height: '30px',
         border: '1px solid #d3d3d3',
         marginLeft: '-1px',
         marginTop: '-1px',
@@ -41,9 +41,10 @@ export const getNodeStyle = nodeFlag => {
 }
 
 export class Node {
-    constructor(state, parent) {
+    constructor(state, parent, path_cost) {
         this.state = state;
         this.parent = parent;
+        this.path_cost = path_cost;
     }
 }
 
@@ -57,49 +58,77 @@ export class Pathfinder {
         this.startCoords = startCoords;
         this.endCoords = endCoords;
         this.canvasDimensions = canvasDimensions;
+        this.allowDiag = true;
     }
 
     goalTest = coords => {
         return coords.x === this.endCoords.x && coords.y === this.endCoords.y;
     }
 
-    heuristics = node => ((this.endCoords.y - node.y) ** 2) + ((this.endCoords.x - node.x) ** 2) ** 0.5;
+    manhattan = node => Math.abs((this.endCoords.y - node.y) + (this.endCoords.x - node.x));
+    eucledian = node => ((this.endCoords.y - node.y) ** 2) + ((this.endCoords.x - node.x) ** 2) ** 0.5;
 
     getSurroundingNodesCoords = node => {
         const surroundingNodes = [];
         if (this.nodeIsAtXOfCanvas(node, 'top-left')) {
             surroundingNodes.push({x: node.x + 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y + 1});
+            if (this.allowDiag) surroundingNodes.push({x: node.x + 1, y: node.y + 1});
         } else if (this.nodeIsAtXOfCanvas(node, 'top-right')) {
             surroundingNodes.push({x: node.x - 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y + 1});
+            if (this.allowDiag) surroundingNodes.push({x: node.x - 1, y: node.y + 1});
         } else if (this.nodeIsAtXOfCanvas(node, 'bottom-left')) {
             surroundingNodes.push({x: node.x + 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y - 1});
+            if (this.allowDiag) surroundingNodes.push({x: node.x + 1, y: node.y - 1});
         } else if (this.nodeIsAtXOfCanvas(node, 'bottom-right')) {
             surroundingNodes.push({x: node.x - 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y - 1});
+            if (this.allowDiag) surroundingNodes.push({x: node.x - 1, y: node.y - 1});
         } else if (this.nodeIsAtXOfCanvas(node, 'top')) {
             surroundingNodes.push({x: node.x - 1, y: node.y});
             surroundingNodes.push({x: node.x + 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y + 1});
+            if (this.allowDiag) {
+                surroundingNodes.push({x: node.x + 1, y: node.y + 1});
+                surroundingNodes.push({x: node.x - 1, y: node.y + 1});
+            }
         } else if (this.nodeIsAtXOfCanvas(node, 'right')) {
             surroundingNodes.push({x: node.x - 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y - 1});
             surroundingNodes.push({x: node.x, y: node.y + 1});
+            if (this.allowDiag) {
+                surroundingNodes.push({x: node.x - 1, y: node.y - 1});
+                surroundingNodes.push({x: node.x - 1, y: node.y + 1});
+            }
         } else if (this.nodeIsAtXOfCanvas(node, 'bottom')) {
             surroundingNodes.push({x: node.x - 1, y: node.y});
             surroundingNodes.push({x: node.x + 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y - 1});
+            if (this.allowDiag) {
+                surroundingNodes.push({x: node.x + 1, y: node.y - 1});
+                surroundingNodes.push({x: node.x - 1, y: node.y - 1});
+            }
         } else if (this.nodeIsAtXOfCanvas(node, 'left')) {
             surroundingNodes.push({x: node.x + 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y - 1});
             surroundingNodes.push({x: node.x, y: node.y + 1});
+            if (this.allowDiag) {
+                surroundingNodes.push({x: node.x + 1, y: node.y - 1});
+                surroundingNodes.push({x: node.x + 1, y: node.y + 1});
+            }
         } else {
             surroundingNodes.push({x: node.x + 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y + 1});
             surroundingNodes.push({x: node.x - 1, y: node.y});
             surroundingNodes.push({x: node.x, y: node.y - 1});
+            if (this.allowDiag) {
+                surroundingNodes.push({x: node.x + 1, y: node.y + 1});
+                surroundingNodes.push({x: node.x - 1, y: node.y + 1});
+                surroundingNodes.push({x: node.x + 1, y: node.y - 1});
+                surroundingNodes.push({x: node.x - 1, y: node.y - 1});
+            }
         }
         return surroundingNodes;
     }

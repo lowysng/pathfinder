@@ -7,9 +7,11 @@ export const bfs = pathfinder => {
     if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
 
     const frontier = [node];
+    const frontier_history = [];
     const explored = [];
 
     while (frontier.length > 0 && !solution) {
+        frontier_history.push(frontier.map(n => n.state));
         node = frontier.shift();
         explored.push(node.state);
         pathfinder.getSurroundingNodesCoords(node.state).forEach(coords => {
@@ -24,7 +26,7 @@ export const bfs = pathfinder => {
         })
     }
 
-    return { solution: solution, explored: explored };
+    return { solution: solution, explored: explored, frontier: frontier_history };
 }
 
 export const dfs = pathfinder => {
@@ -34,9 +36,11 @@ export const dfs = pathfinder => {
     if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
 
     const frontier = [node];
+    const frontier_history = [];
     const explored = [];
 
     while (frontier.length > 0 && !solution) {
+        frontier_history.push(frontier.map(n => n.state));
         node = frontier.shift();
         explored.push(node.state);
         pathfinder.getSurroundingNodesCoords(node.state).forEach(coords => {
@@ -51,18 +55,20 @@ export const dfs = pathfinder => {
         })
     }
 
-    return { solution: solution, explored: explored };
+    return { solution: solution, explored: explored, frontier: frontier_history };
 }
 
-export const bestfs = pathfinder => {
+export const bestfs = (pathfinder, heuristic) => {
     let node = new Node(pathfinder.startCoords, null);
     let solution = null;
     if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
 
     const frontier = [node];
+    const frontier_history = [];
     const explored = [];
 
     while (frontier.length > 0 && !solution) {
+        frontier_history.push(frontier.map(n => n.state));
         node = frontier.shift();
         if (pathfinder.goalTest(node.state)) solution = getSolution(node);
         explored.push(node.state);
@@ -71,11 +77,51 @@ export const bestfs = pathfinder => {
             if (!explored.some(c => objectsAreEquivalent(c, coords)) 
             && !frontier.some(n => objectsAreEquivalent(n.state, coords))) {
                 frontier.unshift(child);
-                frontier.sort((a, b) => pathfinder.heuristics(a.state) - pathfinder.heuristics(b.state));
+                switch (heuristic) {
+                    case 'euc':
+                        frontier.sort((a, b) => (pathfinder.eucledian(a.state) < pathfinder.eucledian(b.state)) ? -1 : 1);
+                        break;
+                    case 'man':
+                        frontier.sort((a, b) => (pathfinder.manhattan(a.state) < pathfinder.manhattan(b.state)) ? -1 : 1);
+                        break;
+                }
             }
         })
     }
 
-    return { solution: solution, explored: explored };
+    return { solution: solution, explored: explored, frontier: frontier_history };
+}
 
+export const a_star = (pathfinder, heuristic) => {
+    let node = new Node(pathfinder.startCoords, null, 0);
+    let solution = null;
+    if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
+
+    const frontier = [node];
+    const frontier_history = [];
+    const explored = [];
+
+    while (frontier.length > 0 && !solution) {
+        frontier_history.push(frontier.map(n => n.state));
+        node = frontier.shift();
+        if (pathfinder.goalTest(node.state)) solution = getSolution(node);
+        explored.push(node.state);
+        pathfinder.getSurroundingNodesCoords(node.state).forEach(coords => {
+            let child = new Node(coords, node, node.path_cost + 1);
+            if (!explored.some(c => objectsAreEquivalent(c, coords)) 
+            && !frontier.some(n => objectsAreEquivalent(n.state, coords))) {
+                frontier.unshift(child);
+                switch (heuristic) {
+                    case 'euc':
+                        frontier.sort((a, b) => (pathfinder.eucledian(a.state) + a.path_cost) < (pathfinder.eucledian(b.state) + b.path_cost) ? -1 : 1);
+                        break;
+                    case 'man':
+                        frontier.sort((a, b) => (pathfinder.manhattan(a.state) + a.path_cost) < (pathfinder.manhattan(b.state) + b.path_cost) ? -1 : 1);
+                        break;
+                }
+            }
+        })
+    }
+
+    return { solution: solution, explored: explored, frontier: frontier_history };
 }
