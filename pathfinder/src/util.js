@@ -31,6 +31,7 @@ export const getNodeStyle = nodeFlag => {
         frontier: 3,
         explored: 4,
         solution: 5,
+        wall: 6,
     }
     const nodeStyle = {
         width: `${NODE_WIDTH}px`,
@@ -47,9 +48,11 @@ export const getNodeStyle = nodeFlag => {
     } else if (nodeFlag === nodeFlags.frontier) {
         nodeStyle.backgroundColor = '#b87fed';
     } else if (nodeFlag === nodeFlags.explored) {
-        nodeStyle.backgroundColor = '#290c43';
+        nodeStyle.backgroundColor = '#511884';
     } else if (nodeFlag === nodeFlags.solution) {
         nodeStyle.backgroundColor = '#FCD12A'
+    } else if (nodeFlag === nodeFlags.wall) {
+        nodeStyle.backgroundColor = '#000000'
     }
     return nodeStyle;
 }
@@ -78,11 +81,12 @@ export const getSolution = node => {
 }
 
 export class Pathfinder {
-    constructor(startCoords, endCoords, canvasDimensions) {
+    constructor(startCoords, endCoords, canvasDimensions, matrix) {
         this.startCoords = startCoords;
         this.endCoords = endCoords;
         this.canvasDimensions = canvasDimensions;
         this.allowDiag = true;
+        this.matrix = matrix;
     }
 
     goalTest = coords => {
@@ -157,24 +161,44 @@ export class Pathfinder {
     }
 
     transitionModel = (node, move) => {
+        let newX, newY;
+        const isNotAWall = () => this.matrix[newY][newX] !== 6;
         switch (move) {
             case 'move-top':
-                return { x: node.x, y: node.y - 1};
+                newX = node.x;
+                newY = node.y - 1;
+                break;
             case 'move-top-right':
-                return { x: node.x + 1, y: node.y - 1};
+                newX = node.x + 1;
+                newY = node.y - 1;
+                break;
             case 'move-right':
-                return { x: node.x + 1, y: node.y};
+                newX = node.x + 1;
+                newY = node.y;
+                break;
             case 'move-bottom-right':
-                return { x: node.x + 1, y: node.y + 1};
+                newX = node.x + 1;
+                newY = node.y + 1;
+                break;
             case 'move-bottom':
-                return { x: node.x, y: node.y + 1};
+                newX = node.x;
+                newY = node.y + 1;
+                break;
             case 'move-bottom-left':
-                return { x: node.x - 1, y: node.y + 1};
+                newX = node.x - 1;
+                newY = node.y + 1;
+                break;
             case 'move-left':
-                return { x: node.x - 1, y: node.y};
+                newX = node.x - 1;
+                newY = node.y;
+                break;
             case 'move-top-left':
-                return { x: node.x - 1, y: node.y - 1};
+                newX = node.x - 1;
+                newY = node.y - 1;
+                break;
         }
+        if (isNotAWall()) return { x: newX, y: newY };
+        else return null;
     }
 
     stepCost = move => {

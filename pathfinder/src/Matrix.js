@@ -1,8 +1,9 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { getNodeStyle } from './util';
 import './App.css';
 
-function Matrix({ matrix }) {
+function Matrix({ matrix, toggleWall }) {
     return (
         <div className="matrix">
         {matrix.map((row, rowIdx) => (
@@ -10,7 +11,8 @@ function Matrix({ matrix }) {
                 {row.map((node, colIdx) => (
                     <div 
                     key={`${rowIdx} ${colIdx}`}
-                    style={getNodeStyle(node)}>
+                    style={getNodeStyle(node)}
+                    onMouseOver={() => toggleWall(rowIdx, colIdx)}>
                     </div>
                 ))}
             </div>
