@@ -1,0 +1,1 @@
+{"version":3,"sources":["App.css"],"names":[],"mappings":"AAAA,KACE,iBAAkB,CAClB,iBAAkB,CAClB,SAAU,CACV,QAAS,CACT,qBACF,CAEA,QACE,iBAAkB,CAClB,UACF","file":"main.54ee8277.chunk.css","sourcesContent":["body {\n  overflow-x: hidden;\n  overflow-y: hidden;\n  padding: 0;\n  margin: 0;\n  box-sizing: border-box;\n}\n\n.matrix {\n  position: absolute;\n  z-index: -1;\n}"]}
