@@ -1,3 +1,10 @@
+export const NODE_WIDTH = 30;
+export const NODE_HEIGHT = 30;
+const MANHATTAN_MUL = 8;
+const EUCLEDIAN_MUL = 8;
+const STRAIGHT_MOVE_COST = 2.7;
+const DIAGONAL_MOVE_COST = 3;
+
 export const initializeMatrix = (row, width, start, end) => {
     const matrix = [];
     for (let i = 0; i < row; i++) {
@@ -19,8 +26,8 @@ export const getNodeStyle = nodeFlag => {
         solution: 5,
     }
     const nodeStyle = {
-        width: '30px',
-        height: '30px',
+        width: `${NODE_WIDTH}px`,
+        height: `${NODE_HEIGHT}px`,
         border: '1px solid #d3d3d3',
         marginLeft: '-1px',
         marginTop: '-1px',
@@ -41,17 +48,30 @@ export const getNodeStyle = nodeFlag => {
 }
 
 export class Node {
-    constructor(state, parent, path_cost) {
+    constructor(state, parent, action, path_cost) {
         this.state = state;
         this.parent = parent;
+        this.action = action; 
         this.path_cost = path_cost;
     }
+}
+
+export const getChildNode = (pathfinder, parent, action) => {
+    return new Node(
+        pathfinder.transitionModel(parent.state, action),
+        parent,
+        action,
+        parent.path_cost + pathfinder.stepCost(action)
+    )
 }
 
 export const getSolution = node => {
     if (node.parent === null) return [node.state];
     else return getSolution(node.parent).concat(node.state);
 }
+
+export const manhattan = (a, b) => MANHATTAN_MUL * Math.abs(a.y - b.y) + Math.abs(a.x - b.x);
+export const eucledian = (a, b) => EUCLEDIAN_MUL * ((a.y - b.y) ** 2) + ((a.x - b.x) ** 2) ** 0.5;
 
 export class Pathfinder {
     constructor(startCoords, endCoords, canvasDimensions) {
@@ -65,72 +85,30 @@ export class Pathfinder {
         return coords.x === this.endCoords.x && coords.y === this.endCoords.y;
     }
 
-    manhattan = node => Math.abs((this.endCoords.y - node.y) + (this.endCoords.x - node.x));
-    eucledian = node => ((this.endCoords.y - node.y) ** 2) + ((this.endCoords.x - node.x) ** 2) ** 0.5;
-
-    getSurroundingNodesCoords = node => {
-        const surroundingNodes = [];
+    getPossibleActions = node => {
+        const possibleActions = [];
         if (this.nodeIsAtXOfCanvas(node, 'top-left')) {
-            surroundingNodes.push({x: node.x + 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y + 1});
-            if (this.allowDiag) surroundingNodes.push({x: node.x + 1, y: node.y + 1});
+            possibleActions.push('move-right', 'move-bottom-right', 'move-bottom');
         } else if (this.nodeIsAtXOfCanvas(node, 'top-right')) {
-            surroundingNodes.push({x: node.x - 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y + 1});
-            if (this.allowDiag) surroundingNodes.push({x: node.x - 1, y: node.y + 1});
+            possibleActions.push('move-left', 'move-bottom-left', 'move-bottom');
         } else if (this.nodeIsAtXOfCanvas(node, 'bottom-left')) {
-            surroundingNodes.push({x: node.x + 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y - 1});
-            if (this.allowDiag) surroundingNodes.push({x: node.x + 1, y: node.y - 1});
+            possibleActions.push('move-right', 'move-top-right', 'move-top');
         } else if (this.nodeIsAtXOfCanvas(node, 'bottom-right')) {
-            surroundingNodes.push({x: node.x - 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y - 1});
-            if (this.allowDiag) surroundingNodes.push({x: node.x - 1, y: node.y - 1});
+            possibleActions.push('move-left', 'move-top-left', 'move-top');
         } else if (this.nodeIsAtXOfCanvas(node, 'top')) {
-            surroundingNodes.push({x: node.x - 1, y: node.y});
-            surroundingNodes.push({x: node.x + 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y + 1});
-            if (this.allowDiag) {
-                surroundingNodes.push({x: node.x + 1, y: node.y + 1});
-                surroundingNodes.push({x: node.x - 1, y: node.y + 1});
-            }
+            possibleActions.push('move-left', 'move-bottom-left', 'move-bottom', 'move-bottom-right', 'move-right');
         } else if (this.nodeIsAtXOfCanvas(node, 'right')) {
-            surroundingNodes.push({x: node.x - 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y - 1});
-            surroundingNodes.push({x: node.x, y: node.y + 1});
-            if (this.allowDiag) {
-                surroundingNodes.push({x: node.x - 1, y: node.y - 1});
-                surroundingNodes.push({x: node.x - 1, y: node.y + 1});
-            }
+            possibleActions.push('move-top', 'move-top-left', 'move-left', 'move-bottom-left', 'move-bottom');
         } else if (this.nodeIsAtXOfCanvas(node, 'bottom')) {
-            surroundingNodes.push({x: node.x - 1, y: node.y});
-            surroundingNodes.push({x: node.x + 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y - 1});
-            if (this.allowDiag) {
-                surroundingNodes.push({x: node.x + 1, y: node.y - 1});
-                surroundingNodes.push({x: node.x - 1, y: node.y - 1});
-            }
+            possibleActions.push('move-left', 'move-top-left', 'move-top', 'move-top-right', 'move-right');
         } else if (this.nodeIsAtXOfCanvas(node, 'left')) {
-            surroundingNodes.push({x: node.x + 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y - 1});
-            surroundingNodes.push({x: node.x, y: node.y + 1});
-            if (this.allowDiag) {
-                surroundingNodes.push({x: node.x + 1, y: node.y - 1});
-                surroundingNodes.push({x: node.x + 1, y: node.y + 1});
-            }
+            possibleActions.push('move-top', 'move-top-right', 'move-right', 'move-bottom-right', 'move-bottom');
         } else {
-            surroundingNodes.push({x: node.x + 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y + 1});
-            surroundingNodes.push({x: node.x - 1, y: node.y});
-            surroundingNodes.push({x: node.x, y: node.y - 1});
-            if (this.allowDiag) {
-                surroundingNodes.push({x: node.x + 1, y: node.y + 1});
-                surroundingNodes.push({x: node.x - 1, y: node.y + 1});
-                surroundingNodes.push({x: node.x + 1, y: node.y - 1});
-                surroundingNodes.push({x: node.x - 1, y: node.y - 1});
-            }
+            possibleActions.push('move-top-right', 'move-right',
+            'move-bottom-right', 'move-bottom', 'move-bottom-left',
+            'move-left', 'move-top-left', 'move-top');
         }
-        return surroundingNodes;
+        return possibleActions;
     }
 
     nodeIsAtXOfCanvas = (node, x) => {
@@ -173,6 +151,49 @@ export class Pathfinder {
                 throw new Error('X unrecognized');
         }
     }
+
+    transitionModel = (node, move) => {
+        switch (move) {
+            case 'move-top':
+                return { x: node.x, y: node.y - 1};
+            case 'move-top-right':
+                return { x: node.x + 1, y: node.y - 1};
+            case 'move-right':
+                return { x: node.x + 1, y: node.y};
+            case 'move-bottom-right':
+                return { x: node.x + 1, y: node.y + 1};
+            case 'move-bottom':
+                return { x: node.x, y: node.y + 1};
+            case 'move-bottom-left':
+                return { x: node.x - 1, y: node.y + 1};
+            case 'move-left':
+                return { x: node.x - 1, y: node.y};
+            case 'move-top-left':
+                return { x: node.x - 1, y: node.y - 1};
+        }
+    }
+
+    stepCost = move => {
+        switch (move) {
+            case 'move-top':
+                return STRAIGHT_MOVE_COST;
+            case 'move-top-right':
+                return DIAGONAL_MOVE_COST;
+            case 'move-right':
+                return STRAIGHT_MOVE_COST;
+            case 'move-bottom-right':
+                return DIAGONAL_MOVE_COST;
+            case 'move-bottom':
+                return STRAIGHT_MOVE_COST;
+            case 'move-bottom-left':
+                return DIAGONAL_MOVE_COST;
+            case 'move-left':
+                return STRAIGHT_MOVE_COST;
+            case 'move-top-left':
+                return DIAGONAL_MOVE_COST;
+        }
+    }
+    
 }
 
 export const objectsAreEquivalent = (a, b) => {

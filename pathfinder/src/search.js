@@ -1,8 +1,8 @@
-import { Node, getSolution, objectsAreEquivalent } from './util';
+import { Node, getChildNode, getSolution, objectsAreEquivalent, eucledian, manhattan } from './util';
 
 export const bfs = pathfinder => {
     // Breadth-First Search
-    let node = new Node(pathfinder.startCoords, null);
+    let node = new Node(pathfinder.startCoords, null, null, 0);
     let solution = null;
     if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
 
@@ -14,11 +14,11 @@ export const bfs = pathfinder => {
         frontier_history.push(frontier.map(n => n.state));
         node = frontier.shift();
         explored.push(node.state);
-        pathfinder.getSurroundingNodesCoords(node.state).forEach(coords => {
-            let child = new Node(coords, node);
-            if (!explored.some(c => objectsAreEquivalent(c, coords)) 
-            && !frontier.some(n => objectsAreEquivalent(n.state, coords))) {
-                if (pathfinder.goalTest(coords)) {
+        pathfinder.getPossibleActions(node.state).forEach(action => {
+            let child = getChildNode(pathfinder, node, action);
+            if (!explored.some(c => objectsAreEquivalent(c, child.state)) 
+            && !frontier.some(n => objectsAreEquivalent(n.state, child.state))) {
+                if (pathfinder.goalTest(child.state)) {
                     solution = getSolution(child);
                 }
                 frontier.push(child);
@@ -31,7 +31,7 @@ export const bfs = pathfinder => {
 
 export const dfs = pathfinder => {
     // Depth-First Search
-    let node = new Node(pathfinder.startCoords, null);
+    let node = new Node(pathfinder.startCoords, null, null, 0);
     let solution = null;
     if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
 
@@ -43,11 +43,11 @@ export const dfs = pathfinder => {
         frontier_history.push(frontier.map(n => n.state));
         node = frontier.shift();
         explored.push(node.state);
-        pathfinder.getSurroundingNodesCoords(node.state).forEach(coords => {
-            let child = new Node(coords, node);
-            if (!explored.some(c => objectsAreEquivalent(c, coords)) 
-            && !frontier.some(n => objectsAreEquivalent(n.state, coords))) {
-                if (pathfinder.goalTest(coords)) {
+        pathfinder.getPossibleActions(node.state).forEach(action => {
+            let child = getChildNode(pathfinder, node, action);
+            if (!explored.some(c => objectsAreEquivalent(c, child.state)) 
+            && !frontier.some(n => objectsAreEquivalent(n.state, child.state))) {
+                if (pathfinder.goalTest(child.state)) {
                     solution = getSolution(child);
                 }
                 frontier.unshift(child);
@@ -59,7 +59,7 @@ export const dfs = pathfinder => {
 }
 
 export const bestfs = (pathfinder, heuristic) => {
-    let node = new Node(pathfinder.startCoords, null);
+    let node = new Node(pathfinder.startCoords, null, null, 0);
     let solution = null;
     if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
 
@@ -72,19 +72,12 @@ export const bestfs = (pathfinder, heuristic) => {
         node = frontier.shift();
         if (pathfinder.goalTest(node.state)) solution = getSolution(node);
         explored.push(node.state);
-        pathfinder.getSurroundingNodesCoords(node.state).forEach(coords => {
-            let child = new Node(coords, node);
-            if (!explored.some(c => objectsAreEquivalent(c, coords)) 
-            && !frontier.some(n => objectsAreEquivalent(n.state, coords))) {
+        pathfinder.getPossibleActions(node.state).forEach(action => {
+            let child = getChildNode(pathfinder, node, action);
+            if (!explored.some(c => objectsAreEquivalent(c, child.state)) 
+            && !frontier.some(n => objectsAreEquivalent(n.state, child.state))) {
                 frontier.unshift(child);
-                switch (heuristic) {
-                    case 'euc':
-                        frontier.sort((a, b) => (pathfinder.eucledian(a.state) < pathfinder.eucledian(b.state)) ? -1 : 1);
-                        break;
-                    case 'man':
-                        frontier.sort((a, b) => (pathfinder.manhattan(a.state) < pathfinder.manhattan(b.state)) ? -1 : 1);
-                        break;
-                }
+                frontier.sort((a, b) => (heuristic(pathfinder.endCoords, a.state) < heuristic(pathfinder.endCoords, b.state)) ? -1 : 1);
             }
         })
     }
@@ -93,7 +86,7 @@ export const bestfs = (pathfinder, heuristic) => {
 }
 
 export const a_star = (pathfinder, heuristic) => {
-    let node = new Node(pathfinder.startCoords, null, 0);
+    let node = new Node(pathfinder.startCoords, null, null, 0);
     let solution = null;
     if (pathfinder.goalTest(node.state)) return { solution: getSolution(node), explored: [] };
 
@@ -101,23 +94,25 @@ export const a_star = (pathfinder, heuristic) => {
     const frontier_history = [];
     const explored = [];
 
+    let i = 0;
+
     while (frontier.length > 0 && !solution) {
         frontier_history.push(frontier.map(n => n.state));
         node = frontier.shift();
         if (pathfinder.goalTest(node.state)) solution = getSolution(node);
         explored.push(node.state);
-        pathfinder.getSurroundingNodesCoords(node.state).forEach(coords => {
-            let child = new Node(coords, node, node.path_cost + 1);
-            if (!explored.some(c => objectsAreEquivalent(c, coords)) 
-            && !frontier.some(n => objectsAreEquivalent(n.state, coords))) {
+        pathfinder.getPossibleActions(node.state).forEach(action => {
+            let child = getChildNode(pathfinder, node, action);
+            let childInExplored = explored.some(c => objectsAreEquivalent(c, child.state));
+            let childInFrontier = frontier.some(n => objectsAreEquivalent(n.state, child.state));
+            if (!childInExplored && !childInFrontier) {
                 frontier.unshift(child);
-                switch (heuristic) {
-                    case 'euc':
-                        frontier.sort((a, b) => (pathfinder.eucledian(a.state) + a.path_cost) < (pathfinder.eucledian(b.state) + b.path_cost) ? -1 : 1);
-                        break;
-                    case 'man':
-                        frontier.sort((a, b) => (pathfinder.manhattan(a.state) + a.path_cost) < (pathfinder.manhattan(b.state) + b.path_cost) ? -1 : 1);
-                        break;
+                frontier.sort((a, b) => (heuristic(pathfinder.endCoords, a.state) + a.path_cost < heuristic(pathfinder.endCoords, b.state) + b.path_cost) ? -1 : 1);
+            }
+            else if (childInFrontier) {
+                let found = frontier.find(node => objectsAreEquivalent(node.state, child.state));
+                if ((found.path_cost + heuristic(pathfinder.endCoords, found.state) > child.path_cost + heuristic(pathfinder.endCoords, child.state))) {
+                    found = child;
                 }
             }
         })
