@@ -72,7 +72,9 @@ function App() {
         <>
             <Matrix matrix={matrix} toggleWall={toggleWall}/>
             <div className="buttonDisplay">
-                <code>Refresh browser to reset/regenerate start and end nodes</code>
+                <code>Refresh browser to reset canvas or regenerate start and end nodes</code>
+                <br/>
+                <code>Use mouse hovers to draw walls!</code>
                 <br/>
                 <div style={{display: 'flex'}}>
                     <button onClick={() => search(bfs)}>Breadth-First Search</button>
