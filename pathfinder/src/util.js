@@ -1,9 +1,16 @@
 export const NODE_WIDTH = 30;
 export const NODE_HEIGHT = 30;
-const MANHATTAN_MUL = 8;
-const EUCLEDIAN_MUL = 8;
+const MANHATTAN_MUL = 9;
+const EUCLEDIAN_MUL = 9;
+const OCTILE_MUL = 2.5;
+const CHEBYSHEV_MUL = 2.7;
 const STRAIGHT_MOVE_COST = 2.7;
 const DIAGONAL_MOVE_COST = 3;
+
+export const manhattan = (a, b) => MANHATTAN_MUL * Math.abs(a.y - b.y) + Math.abs(a.x - b.x);
+export const eucledian = (a, b) => EUCLEDIAN_MUL * ((a.y - b.y) ** 2) + ((a.x - b.x) ** 2) ** 0.5;
+export const octile = (a, b) => OCTILE_MUL * Math.max(Math.abs(a.x-b.x), Math.abs(a.y-b.y)) + (Math.sqrt(2)-1)*(Math.min(Math.abs(a.x-b.x), Math.abs(a.y-b.y)));
+export const chebyshev = (a, b) => CHEBYSHEV_MUL * Math.max(Math.abs(a.x-b.x), Math.abs(a.y-b.y));
 
 export const initializeMatrix = (row, width, start, end) => {
     const matrix = [];
@@ -69,9 +76,6 @@ export const getSolution = node => {
     if (node.parent === null) return [node.state];
     else return getSolution(node.parent).concat(node.state);
 }
-
-export const manhattan = (a, b) => MANHATTAN_MUL * Math.abs(a.y - b.y) + Math.abs(a.x - b.x);
-export const eucledian = (a, b) => EUCLEDIAN_MUL * ((a.y - b.y) ** 2) + ((a.x - b.x) ** 2) ** 0.5;
 
 export class Pathfinder {
     constructor(startCoords, endCoords, canvasDimensions) {

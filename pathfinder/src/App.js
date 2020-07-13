@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import Matrix from './Matrix';
-import { NODE_WIDTH, NODE_HEIGHT, initializeMatrix, Pathfinder, manhattan, eucledian } from './util';
+import { NODE_WIDTH, NODE_HEIGHT, initializeMatrix, Pathfinder, manhattan, eucledian, octile, chebyshev} from './util';
 import { bfs, dfs, bestfs, a_star } from './search';
 import './App.css';
 
 function App() {
 
-    // make walls
-    // cleanup UI 
-
     const NUM_ROWS = Math.floor(window.innerHeight/NODE_HEIGHT);
     const NUM_COLS = Math.floor(window.innerWidth/NODE_WIDTH);
-    // const START_COORDS = { x: Math.floor(Math.random() * NUM_COLS), y: Math.floor(Math.random() * NUM_ROWS) };
-    // const END_COORDS = { x: Math.floor(Math.random() * NUM_COLS), y: Math.floor(Math.random() * NUM_ROWS) };
-    const START_COORDS = { x: 10, y: 10 };
-    const END_COORDS = { x: NUM_COLS-10, y: NUM_ROWS-10 };
+    const START_COORDS = { x: Math.floor(Math.random() * NUM_COLS), y: Math.floor(Math.random() * NUM_ROWS) };
+    const END_COORDS = { x: Math.floor(Math.random() * NUM_COLS), y: Math.floor(Math.random() * NUM_ROWS) };
+    // const START_COORDS = { x: 10, y: 10 };
+    // const END_COORDS = { x: NUM_COLS - 10, y: NUM_ROWS - 10 };
 
     const [startCoords, setStartCoords] = useState(START_COORDS);
     const [endCoords, setEndCoords] = useState(END_COORDS);
@@ -65,10 +62,18 @@ function App() {
             <Matrix matrix={matrix}/>
             <button onClick={() => search(bfs)}>Breadth-First Search</button>
             <button onClick={() => search(dfs)}>Depth-First Search</button>
-            <button onClick={() => search(bestfs, eucledian)}>Best-First Search (Eucledian)</button>
-            <button onClick={() => search(bestfs, manhattan)}>Best-First Search (Manhattan)</button>
-            <button onClick={() => search(a_star, eucledian)}>A* Search (Eucledian)</button>
-            <button onClick={() => search(a_star, manhattan)}>A* Search (Manhattan)</button>
+            <div style={{display: 'flex'}}>
+                <button onClick={() => search(bestfs, eucledian)}>Best-First Search (Eucledian)</button>
+                <button onClick={() => search(bestfs, manhattan)}>Best-First Search (Manhattan)</button>
+                <button onClick={() => search(bestfs, octile)}>Best-First Search (Octile)</button>
+                <button onClick={() => search(bestfs, chebyshev)}>Best-First Search (Chebyshev)</button>
+            </div>
+            <div style={{display: 'flex'}}>
+                <button onClick={() => search(a_star, eucledian)}>A* Search (Eucledian)</button>
+                <button onClick={() => search(a_star, manhattan)}>A* Search (Manhattan)</button>
+                <button onClick={() => search(a_star, octile)}>A* Search (Octile)</button>
+                <button onClick={() => search(a_star, chebyshev)}>A* Search (Chebyshev)</button>
+            </div>
             <button onClick={() => clear()}>Clear</button>
         </>
     )
